@@ -6,6 +6,7 @@ type Item = {
   name: string;
   floorEth: number;
   change24hPct: number;
+  image?: string;
   link?: string;
 };
 
@@ -125,10 +126,28 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               width: n.r * 2,
               height: n.r * 2,
               ['--bubble-color' as any]: borderColor(pct),
+              backgroundImage: n.image ? `url(${n.image})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              overflow: 'hidden',
             } as CSSProperties}
             title={`${n.name}\nFloor: ${n.floorEth} ETH\n24h: ${pct > 0 ? '+' : ''}${pct}%`}
           >
-            <div className="bubble-content" style={{ padding: 8, lineHeight: 1.1 }}>
+            <div
+              className="bubble-content"
+              style={{
+                padding: 8,
+                lineHeight: 1.1,
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(0,0,0,0.45)',
+                borderRadius: '50%',
+              }}
+            >
               <strong
                 style={{ fontSize: Math.max(11, Math.min(16, n.r / 4.5)), fontWeight: 700, textShadow: '0 2px 6px rgba(0,0,0,.45)' }}
               >
