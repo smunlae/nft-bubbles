@@ -28,6 +28,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const holdRef = useRef(false);
   const holdTimer = useRef<number | undefined>(undefined);
   const dragCleanupRef = useRef<(() => void) | null>(null);
+  const activePointerId = useRef<number | null>(null);
   const [hovered, setHovered] = useState<Node | null>(null);
 
   const radii = useMemo(() => {
@@ -125,13 +126,16 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     holdTimer.current = window.setTimeout(() => {
       holdRef.current = true;
     }, 250);
+    activePointerId.current = e.pointerId;
     const rect = containerRef.current?.getBoundingClientRect();
     const offsetX = rect?.left || 0;
     const offsetY = rect?.top || 0;
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
 
     const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== activePointerId.current) return;
       if (!ev.buttons) {
+        // Pointer released; finalize the drag without event context.
         up();
         return;
       }
@@ -153,10 +157,11 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       });
     };
 
-    function up() {
+    const up = () => {
       window.clearTimeout(holdTimer.current);
       draggingRef.current = false;
       holdRef.current = false;
+      activePointerId.current = null;
       (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
       setNodes(ns => {
         const n = ns[idx];
@@ -171,7 +176,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', up);
       dragCleanupRef.current = null;
-    }
+    };
 
     simRef.current?.alphaTarget(0.3).restart();
     window.addEventListener('pointermove', move);
