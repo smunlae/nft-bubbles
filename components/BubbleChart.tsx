@@ -59,16 +59,23 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   }, [radii]);
 
   useEffect(() => {
-    const handleResize = () => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      const width = rect?.width || window.innerWidth;
-      const top = rect?.top || 0;
-      const height = window.innerHeight - top - bottomGap;
-      setDims({ width, height });
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setDims(prev => ({
+        width: rect.width || prev.width,
+        height: window.innerHeight - rect.top - bottomGap,
+      }));
     };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
   }, []);
 
   useEffect(() => {
@@ -118,6 +125,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     const rect = containerRef.current?.getBoundingClientRect();
     const offsetX = rect?.left || 0;
     const offsetY = rect?.top || 0;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
 
     const move = (ev: PointerEvent) => {
       draggingRef.current = true;
@@ -140,6 +148,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
 
     const up = () => {
       window.clearTimeout(holdTimer.current);
+      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
       setNodes(ns => {
         const n = ns[idx];
         if (n) {
@@ -151,11 +160,13 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       simRef.current?.alphaTarget(0);
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
     };
 
     simRef.current?.alphaTarget(0.3).restart();
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
   };
 
   const sparkline = useMemo(() => {
@@ -204,6 +215,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
         background: '#0f1115',
         boxShadow: '0 0 0 1px rgba(255,255,255,0.04) inset',
         overflow: 'hidden',
+        touchAction: 'none',
       }}
     >
       {nodes.map((n, i) => {
@@ -235,6 +247,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               boxShadow: '0 0 10px var(--bubble-color)',
               overflow: 'hidden',
               cursor: 'grab',
+              touchAction: 'none',
             } as CSSProperties}
             onPointerEnter={() => setHovered(n)}
             onPointerLeave={() => setHovered(null)}
