@@ -27,6 +27,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const draggingRef = useRef(false);
   const holdRef = useRef(false);
   const holdTimer = useRef<number | undefined>(undefined);
+  const [hovered, setHovered] = useState<Node | null>(null);
 
   const radii = useMemo(() => {
     const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
@@ -157,6 +158,40 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     window.addEventListener('pointerup', up);
   };
 
+  const sparkline = useMemo(() => {
+    if (!hovered) return null;
+    const len = 20;
+    const base = hovered.floorEth;
+    const values = d3.range(len).map(() => base * (0.9 + Math.random() * 0.2));
+    const w = 120;
+    const h = 40;
+    const x = d3.scaleLinear().domain([0, len - 1]).range([0, w]);
+    const y = d3
+      .scaleLinear()
+      .domain([d3.min(values) || 0, d3.max(values) || 0])
+      .range([h, 0]);
+    const line = d3
+      .line()
+      .x((_: number, i: number) => x(i))
+      .y((d: number) => y(d))
+      .curve(d3.curveMonotoneX);
+    return { d: line(values) || '', w, h };
+  }, [hovered]);
+
+  const tooltipDims = { w: 160, h: 90 };
+  const tooltipPos = hovered
+    ? {
+        left: Math.min(
+          Math.max((hovered.x || 0) - tooltipDims.w / 2, 0),
+          dims.width - tooltipDims.w,
+        ),
+        top: Math.max(
+          (hovered.y || 0) - hovered.r - tooltipDims.h - 8,
+          0,
+        ),
+      }
+    : null;
+
   return (
     <div
       ref={containerRef}
@@ -201,7 +236,8 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               overflow: 'hidden',
               cursor: 'grab',
             } as CSSProperties}
-            title={`${n.name}\nFloor: ${n.floorEth} ETH\n24h: ${pct > 0 ? '+' : ''}${pct}%`}
+            onPointerEnter={() => setHovered(n)}
+            onPointerLeave={() => setHovered(null)}
           >
             {n.image && (
               <img
@@ -273,6 +309,60 @@ export default function BubbleChart({ data }: { data: Item[] }) {
           </a>
         );
       })}
+      {hovered && sparkline && tooltipPos && (
+        <div
+          style={{
+            position: 'absolute',
+            left: tooltipPos.left,
+            top: tooltipPos.top,
+            width: tooltipDims.w,
+            padding: 8,
+            background: '#0f1115',
+            border: '1px solid #0bd65e',
+            borderRadius: 8,
+            pointerEvents: 'none',
+            color: '#fff',
+            fontSize: 12,
+            zIndex: 10,
+          }}
+        >
+          <div style={{ fontWeight: 700 }}>{hovered.name}</div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: 2,
+            }}
+          >
+            <span>{hovered.floorEth.toFixed(2)} ETH</span>
+            <span
+              style={{
+                color:
+                  hovered.change24hPct > 0
+                    ? '#0bd65e'
+                    : hovered.change24hPct < 0
+                      ? '#ff4d4d'
+                      : '#dfe3ea',
+              }}
+            >
+              {hovered.change24hPct > 0 ? '+' : ''}
+              {hovered.change24hPct}%
+            </span>
+          </div>
+          <svg
+            width={sparkline.w}
+            height={sparkline.h}
+            style={{ marginTop: 4 }}
+          >
+            <path
+              d={sparkline.d}
+              stroke="#0bd65e"
+              strokeWidth={2}
+              fill="none"
+            />
+          </svg>
+        </div>
+      )}
     </div>
   );
 }
