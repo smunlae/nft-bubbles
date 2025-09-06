@@ -20,6 +20,12 @@ dist/
 # === Coverage & tests ===
 coverage/
 .nyc_output/
+htmlcov/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+.pytest_cache/
 
 # === Local env files (keep examples) ===
 .env
@@ -28,6 +34,7 @@ coverage/
 .env.test.local
 .env.production.local
 .env.*.local
+.local.env
 !.env.example
 !.env.local.example
 
@@ -37,13 +44,66 @@ coverage/
 # === TypeScript generated ===
 next-env.d.ts
 
-# === Editor/OS junk ===
+# === Python bytecode / compiled ===
+__pycache__/
+*.py[cod]
+*$py.class
+
+# === C extensions ===
+*.so
+
+# === Python distribution / packaging ===
+.Python
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# === Virtual environments ===
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# === Pipenv ===
+Pipfile.lock
+
+# === Jupyter ===
+.ipynb_checkpoints
+
+# === SQLite ===
+*.sqlite3
+
+# === Logs ===
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === Editor / IDE ===
 .vscode/
 .idea/
 *.iml
+*.ipr
+*.iws
+
+# === OS junk ===
 .DS_Store
 Thumbs.db
 Icon?
+*~
 *.swp
 *.swo
 
@@ -52,6 +112,7 @@ Icon?
 .stylelintcache
 .parcel-cache/
 .cache/
+.mypy_cache/
 
 # === Archives ===
 *.tgz
@@ -59,5 +120,4 @@ Icon?
 
 # === Misc ===
 *.pem
-*.log
 .node_repl_history
