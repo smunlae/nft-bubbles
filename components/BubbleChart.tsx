@@ -1,6 +1,6 @@
 'use client';
 import * as d3 from 'd3';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 type Item = {
   name: string;
@@ -88,12 +88,12 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     return () => void sim.stop();
   }, [nodes.length, dims.width, dims.height]);
 
-  const color = (v: number) =>
+  const borderColor = (v: number) =>
     v > 0
-      ? `linear-gradient(135deg,#0bd65e,#2ee58b)`
+      ? '#0bd65e'
       : v < 0
-      ? `linear-gradient(135deg,#ff4d4d,#ff7474)`
-      : `linear-gradient(135deg,#445,#667)`;
+      ? '#ff4d4d'
+      : '#667';
 
   return (
     <div
@@ -114,6 +114,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
         return (
           <a
             key={i}
+            className="bubble"
             href={n.link || '#'}
             target="_blank"
             rel="noreferrer"
@@ -123,31 +124,24 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               top: (n.y || 0) - n.r,
               width: n.r * 2,
               height: n.r * 2,
-              borderRadius: '50%',
-              backgroundImage: color(pct),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              color: 'white',
-              boxShadow: '0 12px 40px rgba(0,0,0,.45), inset 0 0 1px rgba(255,255,255,.25)',
-            }}
+              ['--bubble-color' as any]: borderColor(pct),
+            } as CSSProperties}
             title={`${n.name}\nFloor: ${n.floorEth} ETH\n24h: ${pct > 0 ? '+' : ''}${pct}%`}
           >
-            <div style={{ padding: 8, lineHeight: 1.1 }}>
-              <div
+            <div className="bubble-content" style={{ padding: 8, lineHeight: 1.1 }}>
+              <strong
                 style={{ fontSize: Math.max(11, Math.min(16, n.r / 4.5)), fontWeight: 700, textShadow: '0 2px 6px rgba(0,0,0,.45)' }}
               >
                 {n.name}
-              </div>
-              <div style={{ opacity: 0.9, fontSize: Math.max(11, n.r / 6.5) }}>
+              </strong>
+              <p style={{ opacity: 0.9, fontSize: Math.max(11, n.r / 6.5) }}>
                 {n.floorEth.toFixed(2)} ETH
-              </div>
-              <div
+              </p>
+              <p
                 style={{ marginTop: 2, fontSize: Math.max(11, n.r / 6.2), fontWeight: 700, color: pct > 0 ? '#c9ffd8' : pct < 0 ? '#ffe0e0' : '#dfe3ea' }}
               >
                 {pct > 0 ? '+' : ''}{pct}%
-              </div>
+              </p>
             </div>
           </a>
         );
