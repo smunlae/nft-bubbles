@@ -31,10 +31,11 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const radii = useMemo(() => {
     const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
     const scale = dims.width / 1100;
+    const sizeMultiplier = 1.7;
     return d3
       .scaleSqrt()
       .domain([0, maxAbs])
-      .range([36 * scale, 110 * scale]);
+      .range([36 * scale * sizeMultiplier, 110 * scale * sizeMultiplier]);
   }, [data, dims.width]);
 
   useEffect(() => {

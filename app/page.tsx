@@ -24,10 +24,7 @@ export default function Page() {
   return (
     <main style={{ minHeight: '100svh', background: '#0b0b0c', color: 'white' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: 0.2 }}>Base NFT — 24h Change (Bubbles)</h1>
-        <p style={{ opacity: 0.7, marginTop: 6, marginBottom: 20 }}>
-          Size represents |Δ%| over 24h; color: green for rise, red for drop; label shows name and floor (ETH).
-        </p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: 0.2 }}>Top Base NFTs — 24h Change (Bubbles)</h1>
         <BubbleChart data={data} />
         <footer style={{ opacity: 0.6, marginTop: 16, fontSize: 12 }}>Warning: mock data</footer>
       </div>

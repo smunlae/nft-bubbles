@@ -1,0 +1,18 @@
+{
+  "frame": {
+    "name": "NFTBubbles",
+    "version": "1",
+    "iconUrl": "https://cdn.jsdelivr.net/gh/smunlae/nft-bubbles@master/app/logo.png",
+    "homeUrl": "https://nft-bubbles-production.up.railway.app",
+    "splashImageUrl": "https://cdn.jsdelivr.net/gh/smunlae/nft-bubbles@master/app/logo.png",
+    "splashBackgroundColor": "#000000",
+    "subtitle": "NFTBubbles",
+    "description": "NFT price changes in bubbles",
+    "primaryCategory": "finance"
+  },
+  "accountAssociation": {
+    "header": "eyJmaWQiOjkzNjgyNiwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDI5OTE3OTU4NzRjZmNCNDBGNUVmMTc4ZDc1Mzc1MTYwYkZmMDZkZDQifQ",
+    "payload": "eyJkb21haW4iOiJuZnQtYnViYmxlcy1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwIn0",
+    "signature": "MHg3MGE3ZTcyMmMyYTg5YzIxMTJiOTU3YzQyNzgwNWQ2NDRmNmQ4ZTYwYzYwMmJlMzUwYTlmNmVmYWMzOTlhNzM3MGE0MDZhYzMzMjljN2E3ZWU5MWE1MGU1NjYwMjVjOTdhNmM1NGQzZTUwZGQwNGZmZjFkMDAxOGU1MWZmZTU4MTFi"
+  }
+}
