@@ -156,4 +156,4 @@ Use the latest `components/BubbleChart.tsx` included here (it centers via `left/
 ---
 
 ## License
-MIT (or adjust per your needs).
+GPL-3.0
