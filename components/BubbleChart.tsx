@@ -24,11 +24,6 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const bottomGap = 20;
   const [nodes, setNodes] = useState<Node[]>([]);
   const simRef = useRef<any>(null);
-  const draggingRef = useRef(false);
-  const holdRef = useRef(false);
-  const holdTimer = useRef<number | undefined>(undefined);
-  const dragCleanupRef = useRef<(() => void) | null>(null);
-  const activePointerId = useRef<number | null>(null);
   const [hovered, setHovered] = useState<Node | null>(null);
 
   const radii = useMemo(() => {
@@ -118,76 +113,6 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const borderColor = (v: number) =>
     v > 0 ? '#0bd65e' : v < 0 ? '#ff4d4d' : '#667';
 
-  const startDrag = (e: React.PointerEvent, idx: number) => {
-    e.preventDefault();
-    dragCleanupRef.current?.();
-    draggingRef.current = false;
-    holdRef.current = false;
-    holdTimer.current = window.setTimeout(() => {
-      holdRef.current = true;
-    }, 250);
-    activePointerId.current = e.pointerId;
-    const rect = containerRef.current?.getBoundingClientRect();
-    const offsetX = rect?.left || 0;
-    const offsetY = rect?.top || 0;
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-
-    const move = (ev: PointerEvent) => {
-      if (ev.pointerId !== activePointerId.current) return;
-      if (!ev.buttons) {
-        // Pointer released; finalize the drag without event context.
-        up();
-        return;
-      }
-      draggingRef.current = true;
-      setNodes(ns => {
-        const n = ns[idx];
-        if (!n) return ns;
-        const x = Math.max(
-          n.r,
-          Math.min(dims.width - n.r, ev.clientX - offsetX),
-        );
-        const y = Math.max(
-          n.r,
-          Math.min(dims.height - n.r, ev.clientY - offsetY),
-        );
-        n.fx = x;
-        n.fy = y;
-        return [...ns];
-      });
-    };
-
-    const up = () => {
-      window.clearTimeout(holdTimer.current);
-      draggingRef.current = false;
-      holdRef.current = false;
-      activePointerId.current = null;
-      const target = e.currentTarget as HTMLElement;
-      if (target.hasPointerCapture?.(e.pointerId)) {
-        target.releasePointerCapture?.(e.pointerId);
-      }
-      setNodes(ns => {
-        const n = ns[idx];
-        if (n) {
-          n.fx = null;
-          n.fy = null;
-        }
-        return [...ns];
-      });
-      simRef.current?.alphaTarget(0);
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-      window.removeEventListener('pointercancel', up);
-      dragCleanupRef.current = null;
-    };
-
-    simRef.current?.alphaTarget(0.3).restart();
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-    window.addEventListener('pointercancel', up);
-    dragCleanupRef.current = up;
-  };
-
   const sparkline = useMemo(() => {
     if (!hovered) return null;
     const len = 20;
@@ -234,7 +159,6 @@ export default function BubbleChart({ data }: { data: Item[] }) {
         background: '#0f1115',
         boxShadow: '0 0 0 1px rgba(255,255,255,0.04) inset',
         overflow: 'hidden',
-        touchAction: 'none',
       }}
     >
       {nodes.map((n, i) => {
@@ -246,14 +170,6 @@ export default function BubbleChart({ data }: { data: Item[] }) {
             href={n.link || '#'}
             target="_blank"
             rel="noreferrer"
-            onPointerDown={e => startDrag(e, i)}
-            onClick={e => {
-              if (draggingRef.current || holdRef.current) {
-                e.preventDefault();
-              }
-              draggingRef.current = false;
-              holdRef.current = false;
-            }}
             style={{
               position: 'absolute',
               left: (n.x || 0) - n.r,
@@ -265,8 +181,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               borderRadius: '50%',
               boxShadow: '0 0 10px var(--bubble-color)',
               overflow: 'hidden',
-              cursor: 'grab',
-              touchAction: 'none',
+              cursor: 'pointer',
             } as CSSProperties}
             onPointerEnter={() => setHovered(n)}
             onPointerLeave={() => setHovered(null)}
