@@ -1,6 +1,6 @@
 'use client';
 import * as d3 from 'd3';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 type Item = {
   name: string;
@@ -88,12 +88,12 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     return () => void sim.stop();
   }, [nodes.length, dims.width, dims.height]);
 
-  const color = (v: number) =>
+  const borderColor = (v: number) =>
     v > 0
-      ? `linear-gradient(135deg,#0bd65e,#2ee58b)`
+      ? '#0bd65e'
       : v < 0
-      ? `linear-gradient(135deg,#ff4d4d,#ff7474)`
-      : `linear-gradient(135deg,#445,#667)`;
+      ? '#ff4d4d'
+      : '#667';
 
   return (
     <div
@@ -124,14 +124,8 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               top: (n.y || 0) - n.r,
               width: n.r * 2,
               height: n.r * 2,
-              backgroundImage: color(pct),
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              color: 'white',
-              padding: 0,
-              margin: 0,
-            }}
+              ['--bubble-color' as any]: borderColor(pct),
+            } as CSSProperties}
             title={`${n.name}\nFloor: ${n.floorEth} ETH\n24h: ${pct > 0 ? '+' : ''}${pct}%`}
           >
             <div className="bubble-content" style={{ padding: 8, lineHeight: 1.1 }}>
