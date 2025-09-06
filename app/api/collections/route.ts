@@ -16,7 +16,6 @@ export async function GET() {
     const change = isNaN(parsedChange)
       ? Math.random() * 90 - 35
       : parsedChange;
-
     return {
       name: info.name as string,
       image: info.image_url as string,
