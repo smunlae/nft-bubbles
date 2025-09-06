@@ -135,7 +135,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     const move = (ev: PointerEvent) => {
       if (ev.pointerId !== activePointerId.current) return;
       if (!ev.buttons) {
-        up();
+        up(ev);
         return;
       }
       draggingRef.current = true;
