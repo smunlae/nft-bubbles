@@ -39,14 +39,14 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   }, [data, dims.width]);
 
   useEffect(() => {
-    const init = data.map<Node>((d) => ({
+    const init = data.map<Node>(d => ({
       ...d,
-      x: (Math.random() - 0.5) * 200,
-      y: (Math.random() - 0.5) * 200,
+      x: Math.random() * dims.width,
+      y: Math.random() * dims.height,
       r: radii(Math.abs(d.change24hPct)),
     }));
     setNodes(init);
-  }, [data]);
+  }, [data, dims.width, dims.height, radii]);
 
   useEffect(() => {
     setNodes(ns => {
@@ -84,9 +84,8 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     if (!nodes.length) return;
     const sim = (d3 as any)
       .forceSimulation(nodes as any)
-      .force('x', (d3 as any).forceX(dims.width / 2).strength(0.05))
-      .force('y', (d3 as any).forceY(dims.height / 2).strength(0.05))
-      .force('charge', (d3 as any).forceManyBody().strength(2))
+      .force('center', (d3 as any).forceCenter(dims.width / 2, dims.height / 2))
+      .force('charge', (d3 as any).forceManyBody().strength(-20))
       .force(
         'collision',
         (d3 as any)
