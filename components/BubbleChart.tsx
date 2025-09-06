@@ -156,8 +156,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       });
     };
 
-    const up = (ev?: PointerEvent) => {
-      if (ev && ev.pointerId !== activePointerId.current) return;
+    const up = () => {
       window.clearTimeout(holdTimer.current);
       draggingRef.current = false;
       holdRef.current = false;
