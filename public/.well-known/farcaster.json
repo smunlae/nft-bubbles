@@ -8,7 +8,9 @@
     "splashBackgroundColor": "#000000",
     "subtitle": "NFTBubbles",
     "description": "NFT price changes in bubbles",
-    "primaryCategory": "finance"
+    "primaryCategory": "finance",
+    "imageUrl": "https://cdn.jsdelivr.net/gh/smunlae/nft-bubbles@master/app/logo.png",
+    "heroImageUrl": "https://cdn.jsdelivr.net/gh/smunlae/nft-bubbles@master/app/logo.png"
   },
   "accountAssociation": {
     "header": "eyJmaWQiOjkzNjgyNiwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDI5OTE3OTU4NzRjZmNCNDBGNUVmMTc4ZDc1Mzc1MTYwYkZmMDZkZDQifQ",
