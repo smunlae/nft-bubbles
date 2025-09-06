@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const appName = process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'Base NFT Bubbles';
   return {
     title: appName,
-    description: 'Bubble-chart дневных изменений флоров NFT на Base',
+    description: 'Bubble chart of daily NFT floor price changes on Base',
     other: {
       'fc:frame': JSON.stringify({
         version: 'next',
