@@ -10,13 +10,21 @@ type Item = {
   link?: string;
 };
 
-type Node = Item & { x: number; y: number; r: number };
+type Node = Item & {
+  x: number;
+  y: number;
+  r: number;
+  fx?: number | null;
+  fy?: number | null;
+};
 
 export default function BubbleChart({ data }: { data: Item[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ width: 1100, height: 560 });
   const bottomGap = 20;
   const [nodes, setNodes] = useState<Node[]>([]);
+  const simRef = useRef<any>(null);
+  const draggingRef = useRef(false);
 
   const radii = useMemo(() => {
     const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
@@ -76,10 +84,13 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       .force('x', (d3 as any).forceX(dims.width / 2).strength(0.05))
       .force('y', (d3 as any).forceY(dims.height / 2).strength(0.05))
       .force('charge', (d3 as any).forceManyBody().strength(2))
-      .force('collision', (d3 as any)
-        .forceCollide()
-        .radius((d: Node) => d.r + 4)
-        .iterations(2))
+      .force(
+        'collision',
+        (d3 as any)
+          .forceCollide()
+          .radius((d: Node) => d.r + 4)
+          .iterations(2),
+      )
       .on('tick', () => {
         nodes.forEach(n => {
           n.x = Math.max(n.r, Math.min(dims.width - n.r, n.x || 0));
@@ -87,15 +98,57 @@ export default function BubbleChart({ data }: { data: Item[] }) {
         });
         setNodes([...nodes]);
       });
+    simRef.current = sim;
     return () => void sim.stop();
   }, [nodes.length, dims.width, dims.height]);
 
   const borderColor = (v: number) =>
-    v > 0
-      ? '#0bd65e'
-      : v < 0
-      ? '#ff4d4d'
-      : '#667';
+    v > 0 ? '#0bd65e' : v < 0 ? '#ff4d4d' : '#667';
+
+  const startDrag = (e: React.PointerEvent, idx: number) => {
+    e.preventDefault();
+    draggingRef.current = true;
+    const rect = containerRef.current?.getBoundingClientRect();
+    const offsetX = rect?.left || 0;
+    const offsetY = rect?.top || 0;
+
+    const move = (ev: PointerEvent) => {
+      setNodes(ns => {
+        const n = ns[idx];
+        if (!n) return ns;
+        const x = Math.max(
+          n.r,
+          Math.min(dims.width - n.r, ev.clientX - offsetX),
+        );
+        const y = Math.max(
+          n.r,
+          Math.min(dims.height - n.r, ev.clientY - offsetY),
+        );
+        n.fx = x;
+        n.fy = y;
+        return [...ns];
+      });
+    };
+
+    const up = () => {
+      draggingRef.current = false;
+      setNodes(ns => {
+        const n = ns[idx];
+        if (n) {
+          n.fx = null;
+          n.fy = null;
+        }
+        return [...ns];
+      });
+      simRef.current?.alphaTarget(0);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+
+    simRef.current?.alphaTarget(0.3).restart();
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
 
   return (
     <div
@@ -120,6 +173,10 @@ export default function BubbleChart({ data }: { data: Item[] }) {
             href={n.link || '#'}
             target="_blank"
             rel="noreferrer"
+            onPointerDown={e => startDrag(e, i)}
+            onClick={e => {
+              if (draggingRef.current) e.preventDefault();
+            }}
             style={{
               position: 'absolute',
               left: (n.x || 0) - n.r,
@@ -129,11 +186,9 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               ['--bubble-color' as any]: borderColor(pct),
               background: 'radial-gradient(circle at center, #0f1115 58%, var(--bubble-color) 100%)',
               borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               boxShadow: '0 0 10px var(--bubble-color)',
               overflow: 'hidden',
+              cursor: 'grab',
             } as CSSProperties}
             title={`${n.name}\nFloor: ${n.floorEth} ETH\n24h: ${pct > 0 ? '+' : ''}${pct}%`}
           >
@@ -142,6 +197,10 @@ export default function BubbleChart({ data }: { data: Item[] }) {
                 src={n.image}
                 alt={n.name}
                 style={{
+                  position: 'absolute',
+                  top: '5%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
                   width: '70%',
                   height: '70%',
                   objectFit: 'cover',
@@ -154,29 +213,40 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               className="bubble-content"
               style={{
                 position: 'absolute',
-                inset: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                top: '60%',
                 padding: 8,
                 lineHeight: 1.1,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'rgba(0,0,0,0.45)',
-                borderRadius: '50%',
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0), var(--bubble-color))',
               }}
             >
               <strong
-                style={{ fontSize: Math.max(11, Math.min(16, n.r / 4.5)), fontWeight: 700, textShadow: '0 2px 6px rgba(0,0,0,.45)' }}
+                style={{
+                  fontSize: Math.max(11, Math.min(16, n.r / 4.5)),
+                  fontWeight: 700,
+                  textShadow: '0 2px 6px rgba(0,0,0,.45)',
+                }}
               >
                 {n.name}
               </strong>
-              <p style={{ opacity: 0.9, fontSize: Math.max(11, n.r / 6.5) }}>
-                {n.floorEth.toFixed(2)} ETH
-              </p>
               <p
-                style={{ marginTop: 2, fontSize: Math.max(11, n.r / 6.2), fontWeight: 700, color: pct > 0 ? '#c9ffd8' : pct < 0 ? '#ffe0e0' : '#dfe3ea' }}
+                style={{
+                  marginTop: 2,
+                  fontSize: Math.max(11, n.r / 6.2),
+                  fontWeight: 700,
+                  color: pct > 0 ? '#c9ffd8' : pct < 0 ? '#ffe0e0' : '#dfe3ea',
+                }}
               >
                 {pct > 0 ? '+' : ''}{pct}%
+              </p>
+              <p style={{ opacity: 0.9, fontSize: Math.max(11, n.r / 6.5) }}>
+                {n.floorEth.toFixed(2)} ETH 💎
               </p>
             </div>
           </a>
