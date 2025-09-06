@@ -4,6 +4,8 @@ Interactive bubble chart that visualizes **24h floor price changes** for NFT col
 Built with **Next.js (App Router, TypeScript)**, **D3** for physics/bubbles, and **Base MiniKit** so the app can be launched as a **Farcaster Mini App**.
 
 ---
+## Farcaster miniapp link 
+https://farcaster.xyz/miniapps/HO9a2qQYlBTV/nftbubbles
 
 ## Features
 - Bubble chart: circle **size = |24h % change|**, **color** (green = up, red = down), label shows name + floor (ETH).
