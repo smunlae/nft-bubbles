@@ -20,7 +20,7 @@ type Node = Item & {
 
 export default function BubbleChart({ data }: { data: Item[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = useState({ width: 1100, height: 560 });
+  const [dims, setDims] = useState({ width: 0, height: 0 });
   const bottomGap = 20;
   const [nodes, setNodes] = useState<Node[]>([]);
   const simRef = useRef<any>(null);
@@ -31,7 +31,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
 
   const radii = useMemo(() => {
     const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
-    const scale = dims.width / 1100;
+    const scale = (dims.width || 1100) / 1100;
     const sizeMultiplier = 1.7;
     return d3
       .scaleSqrt()
@@ -40,6 +40,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   }, [data, dims.width]);
 
   useEffect(() => {
+    if (!dims.width || !dims.height) return;
     const init = data.map<Node>(d => ({
       ...d,
       x: Math.random() * dims.width,
