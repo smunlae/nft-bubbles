@@ -129,6 +129,10 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
 
     const move = (ev: PointerEvent) => {
+      if (!ev.buttons) {
+        up();
+        return;
+      }
       draggingRef.current = true;
       setNodes(ns => {
         const n = ns[idx];
@@ -147,7 +151,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       });
     };
 
-    const up = () => {
+    function up() {
       window.clearTimeout(holdTimer.current);
       (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
       setNodes(ns => {
@@ -162,7 +166,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', up);
-    };
+    }
 
     simRef.current?.alphaTarget(0.3).restart();
     window.addEventListener('pointermove', move);
