@@ -26,10 +26,10 @@ export default function Page() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px' }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: 0.2 }}>Base NFT — 24h Change (Bubbles)</h1>
         <p style={{ opacity: 0.7, marginTop: 6, marginBottom: 20 }}>
-          Размер — |Δ%| за сутки; цвет: зелёный = рост, красный = падение; подпись — имя и floor (ETH).
+          Size represents |Δ%| over 24h; color: green for rise, red for drop; label shows name and floor (ETH).
         </p>
         <BubbleChart data={data} />
-        <footer style={{ opacity: 0.6, marginTop: 16, fontSize: 12 }}>Данные из backend/filtered_collections.csv.</footer>
+        <footer style={{ opacity: 0.6, marginTop: 16, fontSize: 12 }}>Warning: mock data</footer>
       </div>
     </main>
   );

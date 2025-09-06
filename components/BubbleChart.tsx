@@ -26,7 +26,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const simRef = useRef<any>(null);
   const draggingRef = useRef(false);
   const holdRef = useRef(false);
-  const holdTimer = useRef<number>();
+  const holdTimer = useRef<number | undefined>(undefined);
 
   const radii = useMemo(() => {
     const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
