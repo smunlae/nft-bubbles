@@ -1,84 +1,61 @@
+# Base NFT Bubbles — Next.js + D3 + Base MiniKit
 
-# Base NFT Bubbles (Next.js + MiniKit)
+Interactive bubble chart that visualizes **24h floor price changes** for NFT collections on **Base**.  
+Built with **Next.js (App Router, TypeScript)**, **D3** for physics/bubbles, and **Base MiniKit** so the app can be launched as a **Farcaster Mini App**.
 
-Bubble‑визуализация суточных изменений флора NFT на **Base** + интеграция **Base MiniKit** для запуска как Farcaster Mini App.
+---
 
-## Требования
-- **Node.js 18+ (LTS)**. Проверка: `node -v`
-- IDE: рекомендую **VS Code** (но можно WebStorm / любой редактор).
-- Аккаунт в **Coinbase Developer Platform** (для API Key).
+## Features
+- Bubble chart: circle **size = |24h % change|**, **color** (green = up, red = down), label shows name + floor (ETH).
+- Mocked data (easy to swap with a real API).
+- MiniKit integration (`MiniKitProvider`, `useMiniKit`, `setFrameReady`) for Farcaster launch.
+- Responsive layout, TypeScript-first.
+- Minimal code structure, easy to extend.
 
-## Запуск локально
+---
+
+## Requirements
+- **Node.js 18+** (LTS recommended) and **npm**.
+- An editor (VS Code recommended).
+- For MiniKit in production: a **CDP Client API Key** from Coinbase Developer Platform.
+
+---
+
+## Quick Start
+Unzip or clone the project, then:
+
 ```bash
-# установить зависимости
 npm i
-
-# создать файл .env.local (см. ниже)
-cp .env.local.example .env.local   # или создайте вручную и заполните
-
-# dev‑режим
+cp .env.local.example .env.local   # or create .env.local manually
 npm run dev
-# откройте http://localhost:3000
+# open http://localhost:3000
 ```
 
-## Сборка и продакшн
+### Scripts
 ```bash
-npm run build
-npm start
+npm run dev    # development server
+npm run build  # production build
+npm start      # run built app (after build)
 ```
 
-## Деплой (Vercel, Netlify и т.д.)
-- Для Vercel: импортируйте репозиторий, задайте переменные окружения из `.env.local`, деплой.
-- Важно: `NEXT_PUBLIC_URL` должен указывать на HTTPS‑URL вашего деплоя.
+---
 
-## Настройка MiniKit / Farcaster
-1. Получите **CDP Client API Key** (Coinbase) и положите в `.env.local` как `NEXT_PUBLIC_ONCHAINKIT_API_KEY`.
-2. Сгенерируйте значения Farcaster association (если нужно публиковаться в каталоге):
-   ```bash
-   npx create-onchain --manifest
-   ```
-   Затем перенесите `FARCASTER_HEADER`, `FARCASTER_PAYLOAD`, `FARCASTER_SIGNATURE` в `.env.local`.
-3. Проверьте эндпоинт `/.well-known/farcaster.json` на вашем домене.
-4. В `app/layout.tsx` есть `fc:frame`‑метаданные с кнопкой **Launch**.
+## Environment Variables (`.env.local`)
 
-## Где менять данные графика
-Файл: `app/page.tsx` — массив `DATA`. Подставьте реальные значения (или подключите API) вида:
-```ts
-type Coll = { name: string; floorEth: number; change24hPct: number; link?: string };
-```
-
-## Структура
-```
-app/
-  .well-known/farcaster.json/route.ts
-  api/webhook/route.ts
-  globals.css
-  layout.tsx
-  page.tsx
-components/
-  BubbleChart.tsx
-providers/
-  MiniKitProvider.tsx
-```
-
-## Переменные окружения (.env.local)
-Скопируйте из примера и заполните:
-```
+Minimal setup for local dev:
+```dotenv
 NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME=Base NFT Bubbles
 NEXT_PUBLIC_URL=http://localhost:3000
+NEXT_PUBLIC_ONCHAINKIT_API_KEY=YOUR_CDP_CLIENT_API_KEY
+```
 
-# Ключ из Coinbase Developer Platform:
-NEXT_PUBLIC_ONCHAINKIT_API_KEY=your_cdp_client_api_key
+Optional (for Farcaster catalog & richer previews):
+```dotenv
+FARCASTER_HEADER=
+FARCASTER_PAYLOAD=
+FARCASTER_SIGNATURE=
 
-# (опционально) для совместимости:
-# NEXT_PUBLIC_CDP_CLIENT_API_KEY=your_cdp_client_api_key
-
-# Farcaster association (опционально, для каталога/валидации):
-FARCASTER_HEADER=base64_header
-FARCASTER_PAYLOAD=base64_payload
-FARCASTER_SIGNATURE=hex_signature
-
-# Доп. поля (не обязательно):
+# Optional visuals/metadata for frames & OG previews
 NEXT_PUBLIC_APP_HERO_IMAGE=
 NEXT_PUBLIC_APP_SPLASH_IMAGE=
 NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR=#0b0b0c
@@ -89,3 +66,94 @@ NEXT_PUBLIC_APP_OG_TITLE=Base NFT Bubbles
 NEXT_PUBLIC_APP_OG_DESCRIPTION=24h change bubble chart
 NEXT_PUBLIC_APP_OG_IMAGE=
 ```
+
+> **Tip:** On first run you can leave a dummy API key. For production and Farcaster catalog you should use a real key and fill the Farcaster association fields.
+
+---
+
+## Where to Change the Data
+The mock dataset lives in `app/page.tsx`:
+```ts
+type Coll = { name: string; floorEth: number; change24hPct: number; link?: string };
+const DATA: Coll[] = [ /* ... */ ];
+```
+You can:
+- Replace the array with your own values, or
+- Fetch from an external API and pass that array to `<BubbleChart data={...} />`.
+
+`components/BubbleChart.tsx` is pure presentational logic and does not depend on the data source.
+
+---
+
+## MiniKit / Farcaster Integration
+Already wired:
+- `providers/MiniKitProvider.tsx` wraps the app with `MiniKitProvider`.
+- `app/page.tsx` uses `useMiniKit()` and calls `setFrameReady()`.
+- `app/layout.tsx` sets **`fc:frame`** metadata to show a “Launch” button in Farcaster.
+- `/.well-known/farcaster.json` route serves the app **manifest**.
+
+Steps to go live as a Mini App:
+1. Obtain your **CDP Client API Key** (Coinbase Dev Platform) and put it in `.env.local` as `NEXT_PUBLIC_ONCHAINKIT_API_KEY`.
+2. (Optional, for catalog) Generate Farcaster association values:
+   ```bash
+   npx create-onchain --manifest
+   ```
+   Copy `FARCASTER_HEADER`, `FARCASTER_PAYLOAD`, `FARCASTER_SIGNATURE` to `.env.local`.
+3. Deploy to a public HTTPS URL and set `NEXT_PUBLIC_URL` accordingly.
+4. Verify `https://<your-domain>/.well-known/farcaster.json` returns your manifest.
+5. Share/cast your link; the “Launch” button should appear.
+
+---
+
+## Project Structure
+```
+app/
+  .well-known/farcaster.json/route.ts  # Farcaster manifest endpoint
+  api/webhook/route.ts                 # optional webhook stub
+  globals.css
+  layout.tsx                           # fc:frame metadata + provider
+  page.tsx                             # page with mock data + setFrameReady
+components/
+  BubbleChart.tsx                      # D3 force bubbles
+providers/
+  MiniKitProvider.tsx                  # MiniKit provider (Base chain)
+.env.local.example
+```
+
+---
+
+## Deployment (Vercel / Netlify / etc.)
+- Import the repo and set the **same environment variables** in the hosting dashboard.
+- Ensure `NEXT_PUBLIC_URL` is set to your final HTTPS domain (used in manifest and frame metadata).
+- For Vercel, no extra config is necessary for the App Router setup.
+
+---
+
+## Troubleshooting
+**1) `Module not found: Package path ./minikit is not exported from @coinbase/onchainkit`**  
+Use a recent OnchainKit:
+```bash
+npm i @coinbase/onchainkit@latest
+npm i wagmi@^2 viem@^2
+```
+Restart `npm run dev` afterwards.
+
+**2) Port 3000 is busy**  
+- Windows PowerShell:
+  ```powershell
+  netstat -ano | findstr :3000
+  taskkill /PID <PID> /F
+  ```
+- macOS/Linux:
+  ```bash
+  lsof -i :3000
+  kill -9 <PID>
+  ```
+
+**3) Bubbles appear off-center**  
+Use the latest `components/BubbleChart.tsx` included here (it centers via `left/top: calc(50% + x - r)` and clamps nodes by **actual stage width**). If you customized the container widths, ensure the ResizeObserver measures the same element you render into.
+
+---
+
+## License
+MIT (or adjust per your needs).
