@@ -21,6 +21,7 @@ type Node = Item & {
 export default function BubbleChart({ data }: { data: Item[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ width: 1100, height: 560 });
+  const [smallScreen, setSmallScreen] = useState(false);
   const bottomGap = 20;
   const [nodes, setNodes] = useState<Node[]>([]);
   const simRef = useRef<any>(null);
@@ -28,24 +29,29 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const holdRef = useRef(false);
   const holdTimer = useRef<number | undefined>(undefined);
 
+  const displayData = useMemo(
+    () => (smallScreen ? data.slice(0, 15) : data),
+    [data, smallScreen],
+  );
+
   const radii = useMemo(() => {
-    const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
-    const scale = dims.width / 1100;
+    const maxAbs = d3.max(displayData, (d: Item) => Math.abs(d.change24hPct)) || 1;
+    const scale = (dims.width / 1100) * (smallScreen ? 2 : 1);
     return d3
       .scaleSqrt()
       .domain([0, maxAbs])
       .range([36 * scale, 110 * scale]);
-  }, [data, dims.width]);
+  }, [displayData, dims.width, smallScreen]);
 
   useEffect(() => {
-    const init = data.map<Node>((d) => ({
+    const init = displayData.map<Node>((d) => ({
       ...d,
       x: (Math.random() - 0.5) * 200,
       y: (Math.random() - 0.5) * 200,
       r: radii(Math.abs(d.change24hPct)),
     }));
     setNodes(init);
-  }, [data]);
+  }, [displayData]);
 
   useEffect(() => {
     setNodes(ns => {
@@ -63,6 +69,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       const top = rect?.top || 0;
       const height = window.innerHeight - top - bottomGap;
       setDims({ width, height });
+      setSmallScreen(window.innerWidth < 1740 || window.innerHeight < 3520);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
