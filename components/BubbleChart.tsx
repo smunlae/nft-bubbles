@@ -114,6 +114,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
         return (
           <a
             key={i}
+            className="bubble"
             href={n.link || '#'}
             target="_blank"
             rel="noreferrer"
@@ -123,31 +124,30 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               top: (n.y || 0) - n.r,
               width: n.r * 2,
               height: n.r * 2,
-              borderRadius: '50%',
               backgroundImage: color(pct),
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
               color: 'white',
-              boxShadow: '0 12px 40px rgba(0,0,0,.45), inset 0 0 1px rgba(255,255,255,.25)',
+              padding: 0,
+              margin: 0,
             }}
             title={`${n.name}\nFloor: ${n.floorEth} ETH\n24h: ${pct > 0 ? '+' : ''}${pct}%`}
           >
-            <div style={{ padding: 8, lineHeight: 1.1 }}>
-              <div
+            <div className="bubble-content" style={{ padding: 8, lineHeight: 1.1 }}>
+              <strong
                 style={{ fontSize: Math.max(11, Math.min(16, n.r / 4.5)), fontWeight: 700, textShadow: '0 2px 6px rgba(0,0,0,.45)' }}
               >
                 {n.name}
-              </div>
-              <div style={{ opacity: 0.9, fontSize: Math.max(11, n.r / 6.5) }}>
+              </strong>
+              <p style={{ opacity: 0.9, fontSize: Math.max(11, n.r / 6.5) }}>
                 {n.floorEth.toFixed(2)} ETH
-              </div>
-              <div
+              </p>
+              <p
                 style={{ marginTop: 2, fontSize: Math.max(11, n.r / 6.2), fontWeight: 700, color: pct > 0 ? '#c9ffd8' : pct < 0 ? '#ffe0e0' : '#dfe3ea' }}
               >
                 {pct > 0 ? '+' : ''}{pct}%
-              </div>
+              </p>
             </div>
           </a>
         );
