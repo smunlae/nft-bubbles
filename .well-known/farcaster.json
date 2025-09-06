@@ -1,5 +1,5 @@
 {
-  "frame": {
+  "miniapp": {
     "name": "NFTBubbles",
     "version": "1",
     "iconUrl": "https://cdn.jsdelivr.net/gh/smunlae/nft-bubbles@master/app/logo.png",
