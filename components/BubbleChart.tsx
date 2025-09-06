@@ -38,7 +38,13 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       .force('charge', d3.forceManyBody().strength(2))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide<Node>().radius(d => d.r + 4).iterations(2))
-      .on('tick', () => setNodes([...nodes]));
+      .on('tick', () => {
+        nodes.forEach(n => {
+          n.x = Math.max(n.r, Math.min(width - n.r, n.x || 0));
+          n.y = Math.max(n.r, Math.min(height - n.r, n.y || 0));
+        });
+        setNodes([...nodes]);
+      });
     return () => void sim.stop();
   }, [nodes.length]);
 
