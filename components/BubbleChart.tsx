@@ -6,6 +6,7 @@ type Item = {
   name: string;
   floorEth: number;
   change24hPct: number;
+  image?: string;
   link?: string;
 };
 
@@ -72,8 +73,9 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     if (!nodes.length) return;
     const sim = (d3 as any)
       .forceSimulation(nodes as any)
+      .force('x', (d3 as any).forceX(dims.width / 2).strength(0.05))
+      .force('y', (d3 as any).forceY(dims.height / 2).strength(0.05))
       .force('charge', (d3 as any).forceManyBody().strength(2))
-      .force('center', (d3 as any).forceCenter(dims.width / 2, dims.height / 2))
       .force('collision', (d3 as any)
         .forceCollide()
         .radius((d: Node) => d.r + 4)
@@ -125,10 +127,44 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               width: n.r * 2,
               height: n.r * 2,
               ['--bubble-color' as any]: borderColor(pct),
+              background: 'radial-gradient(circle at center, #0f1115 58%, var(--bubble-color) 100%)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 10px var(--bubble-color)',
+              overflow: 'hidden',
             } as CSSProperties}
             title={`${n.name}\nFloor: ${n.floorEth} ETH\n24h: ${pct > 0 ? '+' : ''}${pct}%`}
           >
-            <div className="bubble-content" style={{ padding: 8, lineHeight: 1.1 }}>
+            {n.image && (
+              <img
+                src={n.image}
+                alt={n.name}
+                style={{
+                  width: '70%',
+                  height: '70%',
+                  objectFit: 'cover',
+                  borderRadius: '50%',
+                  pointerEvents: 'none',
+                }}
+              />
+            )}
+            <div
+              className="bubble-content"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                padding: 8,
+                lineHeight: 1.1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(0,0,0,0.45)',
+                borderRadius: '50%',
+              }}
+            >
               <strong
                 style={{ fontSize: Math.max(11, Math.min(16, n.r / 4.5)), fontWeight: 700, textShadow: '0 2px 6px rgba(0,0,0,.45)' }}
               >
