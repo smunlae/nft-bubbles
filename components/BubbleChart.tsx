@@ -69,6 +69,27 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   }, [dims.width, dims.height]);
 
   useEffect(() => {
+    const handleResize = () => {
+      const width = containerRef.current?.clientWidth || window.innerWidth;
+      const height = width * (560 / 1100);
+      setDims({ width, height });
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    setNodes(ns =>
+      ns.map(n => ({
+        ...n,
+        x: Math.max(n.r, Math.min(dims.width - n.r, n.x || 0)),
+        y: Math.max(n.r, Math.min(dims.height - n.r, n.y || 0)),
+      }))
+    );
+  }, [dims.width, dims.height]);
+
+  useEffect(() => {
     if (!nodes.length) return;
     const sim = (d3 as any)
       .forceSimulation(nodes as any)
