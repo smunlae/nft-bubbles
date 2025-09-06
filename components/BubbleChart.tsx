@@ -25,6 +25,8 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const simRef = useRef<any>(null);
   const draggingRef = useRef(false);
+  const holdRef = useRef(false);
+  const holdTimer = useRef<number>();
 
   const radii = useMemo(() => {
     const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
@@ -32,7 +34,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     return d3
       .scaleSqrt()
       .domain([0, maxAbs])
-      .range([26 * scale, 90 * scale]);
+      .range([36 * scale, 110 * scale]);
   }, [data, dims.width]);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
         'collision',
         (d3 as any)
           .forceCollide()
-          .radius((d: Node) => d.r + 4)
+          .radius((d: Node) => d.r + 6)
           .iterations(2),
       )
       .on('tick', () => {
@@ -107,12 +109,17 @@ export default function BubbleChart({ data }: { data: Item[] }) {
 
   const startDrag = (e: React.PointerEvent, idx: number) => {
     e.preventDefault();
-    draggingRef.current = true;
+    draggingRef.current = false;
+    holdRef.current = false;
+    holdTimer.current = window.setTimeout(() => {
+      holdRef.current = true;
+    }, 250);
     const rect = containerRef.current?.getBoundingClientRect();
     const offsetX = rect?.left || 0;
     const offsetY = rect?.top || 0;
 
     const move = (ev: PointerEvent) => {
+      draggingRef.current = true;
       setNodes(ns => {
         const n = ns[idx];
         if (!n) return ns;
@@ -131,7 +138,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
     };
 
     const up = () => {
-      draggingRef.current = false;
+      window.clearTimeout(holdTimer.current);
       setNodes(ns => {
         const n = ns[idx];
         if (n) {
@@ -175,7 +182,11 @@ export default function BubbleChart({ data }: { data: Item[] }) {
             rel="noreferrer"
             onPointerDown={e => startDrag(e, i)}
             onClick={e => {
-              if (draggingRef.current) e.preventDefault();
+              if (draggingRef.current || holdRef.current) {
+                e.preventDefault();
+              }
+              draggingRef.current = false;
+              holdRef.current = false;
             }}
             style={{
               position: 'absolute',
@@ -216,7 +227,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                top: '60%',
+                top: '58%',
                 padding: 8,
                 lineHeight: 1.1,
                 display: 'flex',
@@ -237,16 +248,26 @@ export default function BubbleChart({ data }: { data: Item[] }) {
               </strong>
               <p
                 style={{
-                  marginTop: 2,
+                  margin: '2px 0 0',
                   fontSize: Math.max(11, n.r / 6.2),
                   fontWeight: 700,
                   color: pct > 0 ? '#c9ffd8' : pct < 0 ? '#ffe0e0' : '#dfe3ea',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.6)',
                 }}
               >
                 {pct > 0 ? '+' : ''}{pct}%
               </p>
-              <p style={{ opacity: 0.9, fontSize: Math.max(11, n.r / 6.5) }}>
-                {n.floorEth.toFixed(2)} ETH 💎
+              <p
+                style={{
+                  margin: '1px 0 0',
+                  opacity: 0.9,
+                  fontSize: Math.max(11, n.r / 6.5),
+                  fontWeight: 700,
+                  color: '#fff',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                }}
+              >
+                {n.floorEth.toFixed(2)} ETH
               </p>
             </div>
           </a>
