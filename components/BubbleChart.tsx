@@ -162,7 +162,10 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       draggingRef.current = false;
       holdRef.current = false;
       activePointerId.current = null;
-      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+      const target = e.currentTarget as HTMLElement;
+      if (target.hasPointerCapture?.(e.pointerId)) {
+        target.releasePointerCapture?.(e.pointerId);
+      }
       setNodes(ns => {
         const n = ns[idx];
         if (n) {
