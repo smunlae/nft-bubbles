@@ -14,12 +14,17 @@ type Node = Item & { x: number; y: number; r: number };
 export default function BubbleChart({ data }: { data: Item[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ width: 1100, height: 560 });
+  const bottomGap = 20;
   const [nodes, setNodes] = useState<Node[]>([]);
 
   const radii = useMemo(() => {
-    const maxAbs = d3.max(data, d => Math.abs(d.change24hPct)) || 1;
-    return d3.scaleSqrt().domain([0, maxAbs]).range([26, 90]);
-  }, [data]);
+    const maxAbs = d3.max(data, (d: Item) => Math.abs(d.change24hPct)) || 1;
+    const scale = dims.width / 1100;
+    return d3
+      .scaleSqrt()
+      .domain([0, maxAbs])
+      .range([26 * scale, 90 * scale]);
+  }, [data, dims.width]);
 
   useEffect(() => {
     const init = data.map<Node>((d) => ({
@@ -29,7 +34,39 @@ export default function BubbleChart({ data }: { data: Item[] }) {
       r: radii(Math.abs(d.change24hPct)),
     }));
     setNodes(init);
-  }, [data, radii]);
+  }, [data]);
+
+  useEffect(() => {
+    setNodes(ns => {
+      ns.forEach(n => {
+        n.r = radii(Math.abs(n.change24hPct));
+      });
+      return [...ns];
+    });
+  }, [radii]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      const width = rect?.width || window.innerWidth;
+      const top = rect?.top || 0;
+      const height = window.innerHeight - top - bottomGap;
+      setDims({ width, height });
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    setNodes(ns =>
+      ns.map(n => ({
+        ...n,
+        x: Math.max(n.r, Math.min(dims.width - n.r, n.x || 0)),
+        y: Math.max(n.r, Math.min(dims.height - n.r, n.y || 0)),
+      }))
+    );
+  }, [dims.width, dims.height]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -54,11 +91,14 @@ export default function BubbleChart({ data }: { data: Item[] }) {
 
   useEffect(() => {
     if (!nodes.length) return;
-    const sim = d3
-      .forceSimulation(nodes as d3.SimulationNodeDatum[])
-      .force('charge', d3.forceManyBody().strength(2))
-      .force('center', d3.forceCenter(dims.width / 2, dims.height / 2))
-      .force('collision', d3.forceCollide<Node>().radius(d => d.r + 4).iterations(2))
+    const sim = (d3 as any)
+      .forceSimulation(nodes as any)
+      .force('charge', (d3 as any).forceManyBody().strength(2))
+      .force('center', (d3 as any).forceCenter(dims.width / 2, dims.height / 2))
+      .force('collision', (d3 as any)
+        .forceCollide()
+        .radius((d: Node) => d.r + 4)
+        .iterations(2))
       .on('tick', () => {
         nodes.forEach(n => {
           n.x = Math.max(n.r, Math.min(dims.width - n.r, n.x || 0));
@@ -83,7 +123,7 @@ export default function BubbleChart({ data }: { data: Item[] }) {
         position: 'relative',
         width: '100%',
         height: dims.height,
-        margin: '0 auto',
+        margin: `0 auto ${bottomGap}px`,
         borderRadius: 20,
         background: '#0f1115',
         boxShadow: '0 0 0 1px rgba(255,255,255,0.04) inset',
