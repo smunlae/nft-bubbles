@@ -1,6 +1,6 @@
 'use client';
 import * as d3 from 'd3';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type Item = {
   name: string;
@@ -12,8 +12,8 @@ type Item = {
 type Node = Item & { x: number; y: number; r: number };
 
 export default function BubbleChart({ data }: { data: Item[] }) {
-  const width = 1100;
-  const height = 560;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dims, setDims] = useState({ width: 1100, height: 560 });
   const [nodes, setNodes] = useState<Node[]>([]);
 
   const radii = useMemo(() => {
@@ -32,21 +32,42 @@ export default function BubbleChart({ data }: { data: Item[] }) {
   }, [data, radii]);
 
   useEffect(() => {
+    const handleResize = () => {
+      const width = containerRef.current?.clientWidth || window.innerWidth;
+      const height = width * (560 / 1100);
+      setDims({ width, height });
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    setNodes(ns =>
+      ns.map(n => ({
+        ...n,
+        x: Math.max(n.r, Math.min(dims.width - n.r, n.x || 0)),
+        y: Math.max(n.r, Math.min(dims.height - n.r, n.y || 0)),
+      }))
+    );
+  }, [dims.width, dims.height]);
+
+  useEffect(() => {
     if (!nodes.length) return;
     const sim = d3
       .forceSimulation(nodes as d3.SimulationNodeDatum[])
       .force('charge', d3.forceManyBody().strength(2))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('center', d3.forceCenter(dims.width / 2, dims.height / 2))
       .force('collision', d3.forceCollide<Node>().radius(d => d.r + 4).iterations(2))
       .on('tick', () => {
         nodes.forEach(n => {
-          n.x = Math.max(n.r, Math.min(width - n.r, n.x || 0));
-          n.y = Math.max(n.r, Math.min(height - n.r, n.y || 0));
+          n.x = Math.max(n.r, Math.min(dims.width - n.r, n.x || 0));
+          n.y = Math.max(n.r, Math.min(dims.height - n.r, n.y || 0));
         });
         setNodes([...nodes]);
       });
     return () => void sim.stop();
-  }, [nodes.length]);
+  }, [nodes.length, dims.width, dims.height]);
 
   const color = (v: number) =>
     v > 0
@@ -57,11 +78,11 @@ export default function BubbleChart({ data }: { data: Item[] }) {
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: 'relative',
-        width,
-        maxWidth: '100%',
-        height,
+        width: '100%',
+        height: dims.height,
         margin: '0 auto',
         borderRadius: 20,
         background: '#0f1115',
