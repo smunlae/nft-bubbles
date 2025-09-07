@@ -6,6 +6,8 @@ Built with **Next.js (App Router, TypeScript)**, **D3** for physics/bubbles, and
 ---
 ## Farcaster miniapp link 
 https://farcaster.xyz/miniapps/HO9a2qQYlBTV/nftbubbles
+## YouTube video link
+https://youtu.be/uYNEZpUwkFU
 
 ## Features
 - Bubble chart: circle **size = |24h % change|**, **color** (green = up, red = down), label shows name + floor (ETH).
