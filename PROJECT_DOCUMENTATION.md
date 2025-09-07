@@ -209,6 +209,3 @@ Common issues and fixes:
 
 GNU General Public License v3.0 (GPL-3.0)  
 See `LICENSE` for details.
-
----
-*This document is derived from repository contents and can be saved as `PROJECT_DOCUMENTATION.md`.*
