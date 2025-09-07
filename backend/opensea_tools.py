@@ -5,16 +5,15 @@
 import os
 import time
 import requests
-from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
+import json, csv
+from typing import List, Dict, Any, Optional
 
 load_dotenv()
 
 
 def get_api_key() -> str:
     api_key = os.getenv("OPENSEA_API_KEY")
-    if api_key == "YOUR_API_KEY_HERE":
-        raise SystemExit("Set your OpenSea API key in the OPENSEA_API_KEY environment variable or replace the placeholder.")
     return api_key
 
 
@@ -95,6 +94,7 @@ def fetch_collection_stats(session: requests.Session,
     """
     url = f"https://api.opensea.io/api/v2/collections/{collection_slug}/stats"
     backoff = 1.0
+
     for attempt in range(max_retries):
         try:
             resp = session.get(url, timeout=15)
@@ -202,7 +202,8 @@ def build_filtered_collections(session: requests.Session,
         if volume > vol_thresh and (average_price is None or average_price > mcap_thresh):
             filtered[collection_slug] = stats
             counter += 1
-            print(f"Accepted {collection_slug}: interval={target_interval} volume={volume} average_price={average_price} ({counter}/{max_results})")
+            print(
+                f"Accepted {collection_slug}: interval={target_interval} volume={volume} average_price={average_price} ({counter}/{max_results})")
             if counter >= max_results:
                 break
 
@@ -211,6 +212,43 @@ def build_filtered_collections(session: requests.Session,
     return filtered
 
 
+def save_filtered_collections_csv(all_collections, filtered_collections,
+                                  filename: str = "filtered_collections.csv") -> None:
+    """
+    Saves filtered_collections to CSV with columns: general_info, stats.
+    Supports:
+      - filtered_collections as dict: slug -> stats_obj
+      - filtered_collections as iterable: list of slugs (str) or list of dict objects (which may contain a slug)
+    For each entry, tries to find the original in all_collections by slug/collection/collection_slug.
+    general_info — JSON with fields slug, name, description (if found).
+    stats — JSON with statistics (if available).
+    """
+
+    rows_written = 0
+    try:
+        with open(filename, "w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(fh, fieldnames=["collection_slug", "general_info", "stats"])
+            writer.writeheader()
+
+            counter = 0
+
+            for collection_slug, info in filtered_collections.items():
+
+                while collection_slug != all_collections[counter]["collection"]:
+                    print(f"collection_slug: {collection_slug}, now: {all_collections[counter]['collection']}")
+                    counter += 1
+
+                gi_json = json.dumps(all_collections[counter], ensure_ascii=False)
+                stats_json = json.dumps(info, ensure_ascii=False)
+
+                writer.writerow({"collection_slug": collection_slug, "general_info": gi_json, "stats": stats_json})
+                rows_written += 1
+    except Exception as e:
+        print(f"Failed to write CSV {filename}: {e}")
+        return
+
+    print(f"Wrote {rows_written} rows to {filename}")
+
 
 def main():
     api_key = get_api_key()
@@ -218,21 +256,25 @@ def main():
 
     # 1) fetch up to 1000 collections sorted by market cap
     print("Fetching collections...")
-    all_collections = fetch_collections(session, chain="base", order_by="market_cap", page_limit=100, max_total=1000)
+    all_collections = fetch_collections(session, chain="base", order_by="market_cap", page_limit=100, max_total=100)
     print(f"Fetched {len(all_collections)} collections")
+
+    print(all_collections[0])
 
     # 2) enrich with fresh stats and filter
     print("Building filtered collection stats...")
     filtered_collections = build_filtered_collections(session, all_collections, interval="7d",
                                                       vol_thresh=0.001, mcap_thresh=0.001,
-                                                      max_results=100)
+                                                      max_results=30)
 
     print(f"Filtered collections count: {len(filtered_collections)}")
     # safe access instead of direct indexing to avoid KeyError
     print("Sample 'hypio' entry (if exists):", filtered_collections.get("hypio"))
 
+    print(filtered_collections)
+
     # if you want to return or persist results you can do it here
-    return filtered_collections
+    save_filtered_collections_csv(all_collections, filtered_collections)
 
 
 if __name__ == "__main__":
